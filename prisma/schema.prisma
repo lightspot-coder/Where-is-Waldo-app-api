@@ -15,12 +15,30 @@ datasource db {
 model User { 
   id    Int     @id @default(autoincrement()) 
   name  String
-  password String
+  score Int
+  currentGame Game?
   
 } 
-model Session {
-  id        String   @id
-  sid       String   @unique
-  data      String  
-  expiresAt   DateTime
+model Game {
+  id  Int @id @default(autoincrement())
+  start   DateTime @default(now())
+  end DateTime
+  player User @relation(fields:[userId],references: [id])
+  userId    Int @unique
+  image Image?
+}
+model Image {
+  id  Int @id @default(autoincrement())
+  currentGame Game? @relation(fields:[gameId],references: [id])
+  gameId Int? @unique
+  fileName  String @unique
+  characters Character[]
+}
+model Character{
+  id  Int @id @default(autoincrement())
+  currentImage Image @relation(fields:[imageId], references:[id])
+  imageId Int 
+  name String
+  positionX Int
+  positionY Int
 }
