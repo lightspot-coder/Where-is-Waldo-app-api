@@ -4,12 +4,9 @@ async function db_populate() {
   try {
     await prisma.image.create({
       data: {
-        fileName: "waldo4.jpg",
+        fileName: "waldo1.jpg",
         characters: {
-          create: [
-            { name: "waldo", positionX: 806, positionY: 48 },
-            { name: "odlaw", positionX: 47, positionY: 640 },
-          ],
+          create: [{ name: "waldo", positionX: 486, positionY: 379 }],
         },
       },
     });
