@@ -9,6 +9,7 @@ async function game_get(req, res) {
     });
     return;
   }
+  console.log(game);
   res.json({ message: "game created successful", data: { game } });
 }
 async function gameIsOver(req, res) {
@@ -18,6 +19,7 @@ async function gameIsOver(req, res) {
   if (res.locals.response.message == "character found successful") {
     let someCharacterStillHidden = false;
     const characters = await db.readAllCharacters(+req.params.image);
+    console.log(characters);
     for (let i = 0; i < characters.length; i++) {
       if (!characters[i].finded) {
         someCharacterStillHidden = true;
@@ -25,15 +27,14 @@ async function gameIsOver(req, res) {
         break;
       }
     }
+
     if (!someCharacterStillHidden) {
-      const gameClose = await db.closeGame(+req.params.game);
-      console.log(gameClose);
+      const game = await db.deleteGame(+req.params.game);
+      console.log(game);
       res.json({
         message: "You have finded everyone, congratulation!",
         gameOver: true,
-        data: {
-          gameClose,
-        },
+        data: res.locals.response.data,
       });
       return;
     }
