@@ -1,4 +1,5 @@
 const prisma = require("../lib/prisma");
+const { connect, get } = require("../routes");
 
 async function readCharacter({ imageId, characterName }) {
   try {
@@ -55,20 +56,35 @@ async function createGame(imageId, userId) {
         characters: {
           omit: {
             imageId: true,
+            id: true,
           },
         },
       },
     });
 
-    const newGame = await prisma.game.create({
-      data: {
-        player: {
-          connect: {
-            id: userId,
+    console.log(image);
+    let newGame;
+    if (userId) {
+      newGame = await prisma.game.create({
+        data: {
+          player: {
+            connect: {
+              id: +userId,
+            },
           },
         },
-      },
-    });
+      });
+    } else {
+      newGame = await prisma.game.create({
+        data: {
+          player: {
+            create: {
+              name: "anonymus",
+            },
+          },
+        },
+      });
+    }
 
     const imageLoaded = await prisma.imageLoaded.create({
       data: {
@@ -94,9 +110,6 @@ async function createGame(imageId, userId) {
           },
         },
       },
-      omit: {
-        end: true,
-      },
       include: {
         imageLoaded: {
           include: {
@@ -110,30 +123,40 @@ async function createGame(imageId, userId) {
         },
       },
     });
+
     return newGameUpdate;
   } catch (err) {
     console.log(err);
   }
 }
-/*
-async function closeGame(gameId) {
+
+async function createScore(userId, fileName, score) {
   try {
-    console.log(gameId);
-    const game = await prisma.game.update({
+    const image = await prisma.image.findFirst({
       where: {
-        id: gameId,
-      },
-      data: {
-        finished: true,
-        end: new Date(),
+        fileName: fileName,
       },
     });
-    return game;
+    const newScore = await prisma.scores.create({
+      data: {
+        userScores: {
+          connect: {
+            id: userId,
+          },
+        },
+        value: score,
+        image: {
+          connect: {
+            id: image.id,
+          },
+        },
+      },
+    });
+    return newScore;
   } catch (err) {
     console.log(err);
   }
 }
-*/
 
 async function deleteGame(gameId) {
   try {
@@ -141,8 +164,47 @@ async function deleteGame(gameId) {
       where: {
         id: gameId,
       },
+      include: {
+        imageLoaded: true,
+      },
     });
     return game;
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+async function getUsers() {
+  try {
+    const users = await prisma.user.findMany({
+      omit: {
+        id: true,
+      },
+      include: {
+        scores: {
+          orderBy: {
+            value: "asc",
+          },
+        },
+      },
+    });
+    return users;
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+async function updateUserName(userId, name) {
+  try {
+    const user = await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        name: name,
+      },
+    });
+    return user;
   } catch (err) {
     console.log(err);
   }
@@ -154,4 +216,7 @@ module.exports = {
   updateCharacter,
   readAllCharacters,
   deleteGame,
+  createScore,
+  getUsers,
+  updateUserName,
 };
